@@ -11,7 +11,11 @@ const cpuModel = cpuData[0].model;
 const hostname = os.hostname();
 
 // for ui updates if over threshold
-let cpuThreshold = 67.0;
+let cpuThreshold = 74.6;
+
+function showNotification(options) {
+  new Notification(options.title, options);
+}
 
 // convert the uptime to a more human readable format
 function getUptimeDHMS() {
@@ -35,6 +39,18 @@ setInterval(() => {
     // if use threshold triggered, change bar color to red
     if (info >= cpuThreshold) {
       document.getElementById("cpu-progress").style.background = "red";
+      // show the notification with the cpu % when triggered
+      const currentTimeStr = new Date().toLocaleString();
+      showNotification({
+        title: "CPU Utilization Threshold Exceeded",
+        body: `${info}% over threshold of ${cpuThreshold}% at ${currentTimeStr}`,
+        icon: path.join(
+          path.resolve(__dirname, ".."),
+          "assets",
+          "icons",
+          "icon.png"
+        ),
+      });
     } else {
       document.getElementById("cpu-progress").style.background = "#30c88b";
     }
