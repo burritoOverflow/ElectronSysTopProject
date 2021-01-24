@@ -13,11 +13,20 @@ const hostname = os.hostname();
 
 const settingsForm = document.getElementById("settings-form");
 
+// track these globally as the interval requires them
+let cpuThreshold, alertFrequency;
+
 // event sent from the main window event
 ipcRenderer.on("settings:get", (e, settings) => {
   // set the UI to the values from the settings file
-  document.getElementById("cpu-overload").value = cpuThreshold;
-  document.getElementById("alert-frequency").value = alertFrequency;
+  console.log("Settings recv: ", settings, typeof settings);
+
+  document.getElementById("cpu-overload").value = settings.cpuThreshold;
+  document.getElementById("alert-frequency").value = settings.alertFrequency;
+
+  // set the global state to reflect the change
+  cpuThreshold = settings.cpuThreshold;
+  alertFrequency = settings.alertFrequency;
 });
 
 // get submitted settings from the UI
@@ -34,17 +43,22 @@ settingsForm.addEventListener("submit", (e) => {
     },
   });
 
-  console.log("settings saved");
+  showAlert("Settings saved.");
 });
-
-// for ui updates if over threshold
-let cpuThreshold = 43.6;
-
-// number of minutes before setting next alert
-let alertFrequency = 1;
 
 function showNotification(options) {
   new Notification(options.title, options);
+}
+
+// show alert for 3 seconds
+function showAlert(message) {
+  const alert = document.getElementById("alert");
+  alert.classList.remove("hide");
+  alert.classList.add("alert");
+  alert.innerText = message;
+  setTimeout(() => {
+    alert.classList.add("hide");
+  }, 3000);
 }
 
 // convert the uptime to a more human readable format

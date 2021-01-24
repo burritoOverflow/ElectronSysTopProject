@@ -45,11 +45,9 @@ app.on("ready", () => {
   createMainWindow();
 
   mainWindow.webContents.on("dom-ready", () => {
-    // parse the settings file when the dom is ready
-    mainWindow.webContents.send(
-      "settings:get",
-      JSON.stringify(store.get("settings"))
-    );
+    // parse the settings file when the dom is ready; send the contents to
+    // the renderer process
+    mainWindow.webContents.send("settings:get", store.get("settings"));
     log.info(
       `dom-ready, sent settings:get with settings ${JSON.stringify(
         store.get("settings")
@@ -81,8 +79,9 @@ const menu = [
     : []),
 ];
 
-// set the settings
+// set the settings when the renderer triggers the event
 ipcMain.on("settings:set", (e, settingsObj) => {
+  // set and get the contents; send to renderer
   store.set(settingsObj);
   mainWindow.webContents.send("settings:get", store.get("settings"));
   log.info(
