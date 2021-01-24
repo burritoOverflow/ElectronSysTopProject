@@ -19,8 +19,6 @@ let cpuThreshold, alertFrequency;
 // event sent from the main window event
 ipcRenderer.on("settings:get", (e, settings) => {
   // set the UI to the values from the settings file
-  console.log("Settings recv: ", settings, typeof settings);
-
   document.getElementById("cpu-overload").value = settings.cpuThreshold;
   document.getElementById("alert-frequency").value = settings.alertFrequency;
 
