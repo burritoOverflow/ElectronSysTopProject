@@ -2,6 +2,7 @@ const os = require("os");
 const path = require("path");
 
 const osu = require("node-os-utils");
+const { ipcRenderer } = require("electron");
 
 const cpuData = os.cpus();
 const arch = os.arch();
@@ -9,6 +10,32 @@ const osType = os.type();
 
 const cpuModel = cpuData[0].model;
 const hostname = os.hostname();
+
+const settingsForm = document.getElementById("settings-form");
+
+// event sent from the main window event
+ipcRenderer.on("settings:get", (e, settings) => {
+  // set the UI to the values from the settings file
+  document.getElementById("cpu-overload").value = cpuThreshold;
+  document.getElementById("alert-frequency").value = alertFrequency;
+});
+
+// get submitted settings from the UI
+settingsForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const cpuThreshold = document.getElementById("cpu-overload").value;
+  const alertFrequency = document.getElementById("alert-frequency").value;
+
+  // send new settings to main process
+  ipcRenderer.send("settings:set", {
+    settings: {
+      cpuThreshold: parseFloat(cpuThreshold),
+      alertFrequency: parseFloat(alertFrequency),
+    },
+  });
+
+  console.log("settings saved");
+});
 
 // for ui updates if over threshold
 let cpuThreshold = 43.6;
