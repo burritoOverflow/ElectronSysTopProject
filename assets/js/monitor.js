@@ -7,10 +7,18 @@ const cpuData = os.cpus();
 const arch = os.arch();
 const osType = os.type();
 
-const cpuSpeed = cpuData[0].speed;
 const cpuModel = cpuData[0].model;
-const numCpus = cpuData.length;
 const hostname = os.hostname();
+
+// convert the uptime to a more human readable format
+function getUptimeDHMS() {
+  const uptimeTotalSec = os.uptime();
+  const days = Math.floor(uptimeTotalSec / (3600 * 24));
+  const hours = Math.floor((uptimeTotalSec % (3600 * 24)) / 3600);
+  const minutes = Math.floor((uptimeTotalSec % 3600) / 60);
+  const seconds = Math.floor(uptimeTotalSec % 60);
+  return `${days}d, ${hours}h, ${minutes}m, ${seconds}s`;
+}
 
 // we'll adjust the cpu use every two seconds
 setInterval(() => {
@@ -23,6 +31,10 @@ setInterval(() => {
     document.getElementById("cpu-free").innerText = `${info}%`;
   });
 
+  // add the uptime
+  document.getElementById("sys-uptime").innerText = `${getUptimeDHMS()}`;
+
+  // update memory usage
   osu.mem.info().then((info) => {
     document.getElementById("mem-usage").innerText = `${info.usedMemMb} MB`;
     document.getElementById("mem-free").innerText = `${info.freeMemMb} MB`;
@@ -40,5 +52,4 @@ document.getElementById("os").innerText = `${osType} ${arch}`;
 // get total memory
 osu.mem.info().then((info) => {
   document.getElementById("mem-total").innerText = `${info.totalMemMb} MB`;
-  // TODO add free and used memory
 });

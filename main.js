@@ -12,7 +12,7 @@ let mainWindow;
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     title: "CPU Monitor",
-    width: isDev ? 800 : 500,
+    width: isDev ? 900 : 500,
     height: 600,
     icon: "./assets/icons/icon.png",
     resizable: isDev ? true : false,
