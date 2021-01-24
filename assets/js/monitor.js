@@ -11,7 +11,10 @@ const cpuModel = cpuData[0].model;
 const hostname = os.hostname();
 
 // for ui updates if over threshold
-let cpuThreshold = 74.6;
+let cpuThreshold = 43.6;
+
+// number of minutes before setting next alert
+let alertFrequency = 1;
 
 function showNotification(options) {
   new Notification(options.title, options);
@@ -27,6 +30,25 @@ function getUptimeDHMS() {
   return `${days}d, ${hours}h, ${minutes}m, ${seconds}s`;
 }
 
+// check the elapsed time since notification
+function runNotify(frequency) {
+  if (localStorage.getItem("lastNotify") === null) {
+    // store the timestamp
+    localStorage.setItem("lastNotify", Number(new Date()));
+    return true;
+  }
+
+  const notifyTime = new Date(parseInt(localStorage.getItem("lastNotify")));
+  const timeNow = new Date();
+  const timeDelta = Math.abs(timeNow - notifyTime);
+  const minutesPassed = Math.ceil(timeDelta / (1000 * 60));
+  if (minutesPassed > frequency) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 // we'll adjust the cpu use every two seconds
 setInterval(() => {
   // update cpu usage
@@ -37,8 +59,9 @@ setInterval(() => {
     document.getElementById("cpu-progress").style.width = `${info}%`;
 
     // if use threshold triggered, change bar color to red
-    if (info >= cpuThreshold) {
+    if (info >= cpuThreshold && runNotify(alertFrequency)) {
       document.getElementById("cpu-progress").style.background = "red";
+
       // show the notification with the cpu % when triggered
       const currentTimeStr = new Date().toLocaleString();
       showNotification({
@@ -51,6 +74,8 @@ setInterval(() => {
           "icon.png"
         ),
       });
+
+      localStorage.setItem("lastNotify", Number(new Date()));
     } else {
       document.getElementById("cpu-progress").style.background = "#30c88b";
     }
