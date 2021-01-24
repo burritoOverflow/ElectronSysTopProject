@@ -10,6 +10,9 @@ const osType = os.type();
 const cpuModel = cpuData[0].model;
 const hostname = os.hostname();
 
+// for ui updates if over threshold
+let cpuThreshold = 67.0;
+
 // convert the uptime to a more human readable format
 function getUptimeDHMS() {
   const uptimeTotalSec = os.uptime();
@@ -25,6 +28,16 @@ setInterval(() => {
   // update cpu usage
   osu.cpu.usage().then((info) => {
     document.getElementById("cpu-usage").innerText = `${info}%`;
+
+    // update cpu progress bar
+    document.getElementById("cpu-progress").style.width = `${info}%`;
+
+    // if use threshold triggered, change bar color to red
+    if (info >= cpuThreshold) {
+      document.getElementById("cpu-progress").style.background = "red";
+    } else {
+      document.getElementById("cpu-progress").style.background = "#30c88b";
+    }
   });
 
   osu.cpu.free().then((info) => {
