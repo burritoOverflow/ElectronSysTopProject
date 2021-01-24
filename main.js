@@ -16,12 +16,12 @@ function createMainWindow() {
     height: 600,
     icon: "./assets/icons/icon.png",
     resizable: isDev ? true : false,
-    backgroundColor: "white",
     webPreferences: {
       nodeIntegration: true,
     },
   });
 
+  // start dev tools automatically in dev mode
   if (isDev) {
     mainWindow.webContents.openDevTools();
   }
