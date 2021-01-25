@@ -1,14 +1,16 @@
-const { app, BrowserWindow, Menu, ipcMain } = require("electron");
+const path = require("path");
+const { app, BrowserWindow, Menu, ipcMain, Tray } = require("electron");
 const log = require("electron-log");
 const Store = require("./Store");
 
 // Set env
-process.env.NODE_ENV = "development";
+process.env.NODE_ENV = "production";
 
 const isDev = process.env.NODE_ENV === "development" ? true : false;
 const isMac = process.platform === "darwin" ? true : false;
 
-let mainWindow;
+let mainWindow = null;
+let tray = null;
 
 // init store
 const store = new Store({
@@ -28,6 +30,8 @@ function createMainWindow() {
     height: 600,
     icon: "./assets/icons/icon.png",
     resizable: isDev ? true : false,
+    show: false,
+    opacity: 0.83,
     webPreferences: {
       nodeIntegration: true,
     },
@@ -41,9 +45,8 @@ function createMainWindow() {
   mainWindow.loadFile("./app/index.html");
 }
 
-app.on("ready", () => {
+function instantiateMainWindow() {
   createMainWindow();
-
   mainWindow.webContents.on("dom-ready", () => {
     // parse the settings file when the dom is ready; send the contents to
     // the renderer process
@@ -54,15 +57,77 @@ app.on("ready", () => {
       )}`
     );
   });
+}
+
+app.on("ready", () => {
+  instantiateMainWindow();
 
   const mainMenu = Menu.buildFromTemplate(menu);
   Menu.setApplicationMenu(mainMenu);
+
+  mainWindow.on("close", (e) => {
+    // ideally prevent the situtation the
+    // exception handles below
+    if (!app.isQuitting) {
+      e.preventDefault();
+      // window is hidden unless quit explicitly
+      mainWindow.hide();
+    }
+    return true;
+  });
+
+  // instantiate the tray
+  const icon = path.join(__dirname, "assets", "icons", "tray_icon.png");
+  tray = new Tray(icon);
+  tray.setToolTip("Electron SysTop Monitor");
+
+  tray.on("click", () => {
+    // check if the main window is visible
+    try {
+      // main window instance is destroyed when the window is
+      // closed on OSX; if it throws reinstantiate the window
+      if (mainWindow.isVisible() == true) {
+        mainWindow.hide();
+      } else {
+        mainWindow.show();
+      }
+    } catch (error) {
+      log.error(error);
+      instantiateMainWindow();
+      // default is hidden. window reinstantiated but will not show
+      // avoids differing behavior
+      mainWindow.show();
+    }
+  });
+
+  // add an option to quit the application
+  tray.on("right-click", () => {
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: "Quit",
+        click: () => {
+          (app.isQuitting = true), app.quit();
+        },
+      },
+    ]);
+
+    tray.popUpContextMenu(contextMenu);
+  });
 });
 
 const menu = [
   ...(isMac ? [{ role: "appMenu" }] : []),
   {
     role: "fileMenu",
+  },
+  {
+    label: "View",
+    submenu: [
+      {
+        label: "Toggle Navigation",
+        click: () => mainWindow.webContents.send("nav:toggle"),
+      },
+    ],
   },
   ...(isDev
     ? [

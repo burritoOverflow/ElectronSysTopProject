@@ -146,3 +146,8 @@ document.getElementById("os").innerText = `${osType} ${arch}`;
 osu.mem.info().then((info) => {
   document.getElementById("mem-total").innerText = `${info.totalMemMb} MB`;
 });
+
+// For the toggle event from the menu
+ipcRenderer.on("nav:toggle", () => {
+  document.getElementById("nav").classList.toggle("hide");
+});
