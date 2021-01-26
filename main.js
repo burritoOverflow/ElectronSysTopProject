@@ -1,8 +1,9 @@
 const path = require("path");
-const { app, Menu, ipcMain, Tray } = require("electron");
+const { app, Menu, ipcMain } = require("electron");
 const log = require("electron-log");
 const Store = require("./Store");
 const MainWindow = require("./MainWindow");
+const AppTray = require("./AppTray");
 
 // Set env
 process.env.NODE_ENV = "production";
@@ -61,41 +62,7 @@ app.on("ready", () => {
 
   // instantiate the tray
   const icon = path.join(__dirname, "assets", "icons", "tray_icon.png");
-  tray = new Tray(icon);
-  tray.setToolTip("Electron SysTop Monitor");
-
-  tray.on("click", () => {
-    // check if the main window is visible
-    try {
-      // main window instance is destroyed when the window is
-      // closed on OSX; if it throws reinstantiate the window
-      if (mainWindow.isVisible() == true) {
-        mainWindow.hide();
-      } else {
-        mainWindow.show();
-      }
-    } catch (error) {
-      log.error(error);
-      instantiateMainWindow();
-      // default is hidden. window reinstantiated but will not show
-      // avoids differing behavior
-      mainWindow.show();
-    }
-  });
-
-  // add an option to quit the application
-  tray.on("right-click", () => {
-    const contextMenu = Menu.buildFromTemplate([
-      {
-        label: "Quit",
-        click: () => {
-          (app.isQuitting = true), app.quit();
-        },
-      },
-    ]);
-
-    tray.popUpContextMenu(contextMenu);
-  });
+  tray = new AppTray(icon, mainWindow);
 });
 
 const menu = [
